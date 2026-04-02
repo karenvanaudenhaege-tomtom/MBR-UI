@@ -85,6 +85,12 @@
   .dot-amber { background: #ba7517; }
   .dot-red   { background: #e24b4a; }
   .dot-blue  { background: #378add; }
+  .nav-badge {
+    margin-left: auto; font-size: 10px; font-weight: 600;
+    background: #e24b4a; color: #fff;
+    border-radius: 99px; padding: 1px 6px; min-width: 18px; text-align: center;
+    display: none;
+  }
   .sidebar-footer { margin-top: auto; padding: 10px 8px 12px; border-top: 0.5px solid var(--border-light); }
   .key-indicator { display: flex; align-items: center; gap: 6px; padding: 7px 10px; font-size: 12px; color: var(--text-tertiary); }
   .key-dot { width: 7px; height: 7px; border-radius: 50%; background: #639922; flex-shrink: 0; }
@@ -108,6 +114,7 @@
   .digest-card {
     background: var(--bg-secondary); border: 0.5px solid var(--border-light);
     border-radius: var(--radius-lg); padding: 14px 16px;
+    position: relative;
   }
   .dc-label { font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
   .dc-body { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
@@ -140,8 +147,8 @@
   .metric-header .mh-name { flex: 1; font-size: 13px; font-weight: 500; }
   .metric-header .mh-val { font-size: 13px; font-weight: 600; margin-right: 4px; }
   .metric-header .mh-delta { font-size: 11px; margin-right: 8px; }
-  .metric-header .mh-link { font-size: 11px; color: var(--text-info); text-decoration: none; margin-right: 8px; }
-  .metric-header .mh-link:hover { text-decoration: underline; }
+  .mh-link { font-size: 11px; color: var(--text-info); text-decoration: none; }
+  .mh-link:hover { text-decoration: underline; }
   .metric-header .chevron { font-size: 11px; color: var(--text-tertiary); transition: transform 0.2s; }
   .metric-header.open .chevron { transform: rotate(90deg); }
   .metric-detail { display: none; padding: 0 16px 14px; }
@@ -185,17 +192,120 @@
     padding: 12px 20px;
     display: flex; align-items: center; gap: 10px;
   }
-  .copilot-bar .copilot-icon {
-    width: 20px; height: 20px; flex-shrink: 0;
-  }
-  .copilot-bar a {
-    font-size: 13px; color: var(--text-info); text-decoration: none; font-weight: 500;
-  }
+  .copilot-bar .copilot-icon { width: 20px; height: 20px; flex-shrink: 0; }
+  .copilot-bar a { font-size: 13px; color: var(--text-info); text-decoration: none; font-weight: 500; }
   .copilot-bar a:hover { text-decoration: underline; }
-  .copilot-bar .copilot-hint {
-    font-size: 12px; color: var(--text-tertiary); margin-left: auto;
-  }
+  .copilot-bar .copilot-hint { font-size: 12px; color: var(--text-tertiary); margin-left: auto; }
 
+  /* ── Comment triggers ── */
+  .comment-trigger {
+    background: none;
+    border: 0.5px solid var(--border-light);
+    border-radius: 6px;
+    color: var(--text-tertiary);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 3px 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: background 0.1s, color 0.1s, border-color 0.1s;
+    line-height: 1.4;
+    flex-shrink: 0;
+  }
+  .comment-trigger:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+  .comment-trigger.has-comments { color: var(--text-info); border-color: rgba(55,138,221,0.45); }
+  .ctrigger-count { font-weight: 600; }
+
+  /* digest-card: trigger is absolutely positioned in top-right corner */
+  .digest-card > .comment-trigger { position: absolute; top: 10px; right: 12px; }
+  /* give collapsible toggles right padding so the chevron doesn't sit under the trigger */
+  .digest-card[data-cid] .collapsible-toggle { padding-right: 36px; }
+
+  /* ── Comment modal ── */
+  .comment-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 200;
+    display: none; align-items: center; justify-content: center;
+  }
+  .comment-overlay.open { display: flex; }
+  .comment-modal {
+    background: var(--bg-primary);
+    border: 0.5px solid var(--border-mid);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    width: 440px; max-width: 92vw;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  }
+  .cm-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+  .cm-title { font-size: 14px; font-weight: 500; }
+  .cm-subtitle { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .cm-close { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-tertiary); padding: 0; line-height: 1; }
+  .cm-close:hover { color: var(--text-primary); }
+  .cm-field { margin-bottom: 12px; }
+  .cm-label { font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 5px; }
+  .cm-input, .cm-textarea {
+    width: 100%; padding: 8px 10px;
+    border: 0.5px solid var(--border-mid);
+    border-radius: var(--radius-md);
+    font: inherit; font-size: 13px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    outline: none;
+  }
+  .cm-input:focus, .cm-textarea:focus { border-color: #378add; }
+  .cm-textarea { resize: vertical; min-height: 72px; }
+  .cm-radios { display: flex; gap: 16px; }
+  .cm-radio { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); cursor: pointer; }
+  .cm-radio input { cursor: pointer; accent-color: #378add; }
+  .cm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+  .btn { padding: 7px 14px; border-radius: var(--radius-md); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; border: 0.5px solid transparent; transition: background 0.1s; }
+  .btn-secondary { background: var(--bg-secondary); border-color: var(--border-mid); color: var(--text-primary); }
+  .btn-secondary:hover { background: var(--bg-tertiary); }
+  .btn-primary { background: #378add; color: #fff; border-color: #378add; }
+  .btn-primary:hover { background: #2b6db8; }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* ── Comments section view ── */
+  .comments-toolbar { display: flex; gap: 6px; flex-wrap: wrap; }
+  .cf-btn {
+    font: inherit; font-size: 11px; cursor: pointer; border-radius: 99px;
+    padding: 3px 10px; border: 0.5px solid var(--border-mid);
+    background: none; color: var(--text-secondary); transition: background 0.1s;
+  }
+  .cf-btn:hover { background: var(--bg-tertiary); }
+  .cf-btn.active { background: var(--bg-tertiary); color: var(--text-primary); font-weight: 500; }
+
+  .comments-empty { text-align: center; padding: 40px 0; color: var(--text-tertiary); font-size: 13px; }
+  .comment-item {
+    background: var(--bg-secondary); border: 0.5px solid var(--border-light);
+    border-radius: var(--radius-lg); padding: 12px 14px;
+    transition: opacity 0.15s;
+  }
+  .comment-item.answered { opacity: 0.6; }
+  .ci-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+  .ci-author { font-size: 12px; font-weight: 500; }
+  .ci-breadcrumb { font-size: 11px; color: var(--text-tertiary); }
+  .ci-time-badge { font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 99px; }
+  .ci-time-badge.in-review { background: #faeeda; color: #854f0b; }
+  .ci-time-badge.afterwards { background: #e6f1fb; color: #185fa5; }
+  .ci-status-badge { font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 99px; margin-left: auto; }
+  .ci-status-badge.open { background: #fcebeb; color: #a32d2d; }
+  .ci-status-badge.answered { background: #eaf3de; color: #3b6d11; }
+  .ci-text { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 8px; }
+  .ci-actions { display: flex; align-items: center; gap: 8px; }
+  .ci-btn {
+    font: inherit; font-size: 11px; cursor: pointer; border-radius: 6px;
+    padding: 3px 9px; border: 0.5px solid var(--border-mid);
+    background: none; color: var(--text-secondary); transition: background 0.1s;
+  }
+  .ci-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+  .ci-btn.answer-btn { color: #3b6d11; border-color: rgba(99,153,34,0.4); }
+  .ci-btn.answer-btn:hover { background: #eaf3de; }
+  .ci-btn.delete-btn { color: #a32d2d; border-color: rgba(162,45,45,0.3); }
+  .ci-btn.delete-btn:hover { background: #fcebeb; }
+  .ci-timestamp { margin-left: auto; font-size: 11px; color: var(--text-tertiary); }
 </style>
 </head>
 <body>
@@ -218,6 +328,7 @@
         <div class="nav-item" onclick="showSection('hdt', this)"><span class="nav-dot dot-blue"></span>Hotly debated topics</div>
         <div class="nav-item" onclick="showSection('risks', this)"><span class="nav-dot dot-red"></span>Risks</div>
         <div class="nav-item" onclick="showSection('customers', this)"><span class="nav-dot dot-green"></span>Voice of the customer</div>
+        <div class="nav-item" id="nav-comments" onclick="showSection('comments', this)"><span class="nav-dot" style="background:var(--text-tertiary)"></span>Comments<span class="nav-badge" id="comments-nav-badge">0</span></div>
       </div>
       <div class="sidebar-footer">
         <div class="key-indicator"><span class="key-dot"></span>Copilot agent connected</div>
@@ -231,10 +342,11 @@
           <span class="topbar-title" id="section-title">Executive summary</span>
           <span style="font-size:12px; color:var(--text-tertiary); margin-left:10px;">Jan 2026 cycle</span>
         </div>
-        <div style="display:flex; gap:6px;">
+        <div style="display:flex; gap:6px; align-items:center;">
           <span class="badge badge-green">0 HDTs</span>
           <span class="badge badge-red">2 risks</span>
           <span class="badge badge-green">Cloud −29.9%</span>
+          <span class="badge badge-red" id="open-comments-badge" style="display:none; cursor:pointer;" onclick="showSection('comments', document.getElementById('nav-comments'))">0 open</span>
         </div>
       </div>
 
@@ -242,7 +354,7 @@
 
         <!-- Summary section -->
         <div id="sec-summary" class="section active">
-          <div class="digest-card">
+          <div class="digest-card" data-cid="sum-outcomes" data-clabel="Key outcomes this cycle" data-csection="summary">
             <div class="dc-label">Key outcomes this cycle</div>
             <div class="dc-body">Orbis Platform transitioned to a <strong>weekly delivery cadence</strong> for the Lane Model map, with 2x–4.5x increase in KTLO. CoW processing capacity for ADAS HD Basemap expanded from 30,000 to <strong>100,000 daily H3 tiles</strong> (3x faster). OSM vandalism analytics dashboards are <strong>now live</strong>. Internal feedback from Cancun is being integrated into OrbIT for unified Lane Model feedback handling.</div>
           </div>
@@ -263,11 +375,11 @@
               <div class="mt-delta delta-up">▲ above ≥60% target</div>
             </div>
           </div>
-          <div class="digest-card">
+          <div class="digest-card" data-cid="sum-changed" data-clabel="What changed / watch" data-csection="summary">
             <div class="dc-label">What changed / watch</div>
             <div class="dc-body">Transitioned to <strong>weekly LM map delivery</strong> (18-day manual process, target 7 days). Highway-only product decision window open through <strong>end of April</strong>. <strong>Violation Store readiness</strong> is a delivery and customer-commitment risk (Toyota, JLR). Operations Training Environment <strong>MVP in March</strong>.</div>
           </div>
-          <div class="digest-card">
+          <div class="digest-card" data-cid="sum-next" data-clabel="What leadership should expect next cycle" data-csection="summary">
             <div class="dc-label">What leadership should expect next cycle</div>
             <div class="dc-body">P0 discoveries on <strong>self-contained incremental conflation</strong> and ingress validation to conclude. By end of Q1: validated architectural path to <strong>continuous, reset-free production</strong> and <strong>7-day LM map lead time</strong>. First version of <strong>Operations Training Environment</strong> to launch. Cost-per-unit metric definition expected April 2026.</div>
           </div>
@@ -277,19 +389,19 @@
         <div id="sec-metrics" class="section">
 
           <!-- 1. Cloud spend -->
-          <div class="metric-card">
+          <div class="metric-card" data-cid="m-cloud" data-clabel="Cloud spend (platform)" data-csection="metrics">
             <div class="metric-header" onclick="toggleMetric(this)">
               <span class="metric-status status-green"></span>
               <span class="mh-name">Cloud spend (platform)</span>
               <span class="mh-val">$197k</span>
               <span class="mh-delta delta-up">▼29.9% vs budget</span>
-              <a class="mh-link" href="https://m365.cloud.microsoft/chat/?titleId=T_6b9ec9cd-187e-0ab2-f87d-8db2c5dd0a95&amp;source=embedded-builder" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">Deep dive →</a>
               <span class="chevron">&#9654;</span>
             </div>
             <div class="metric-detail">
+              <a class="mh-link" href="https://tomtom.atlassian.net/wiki/spaces/MAPDATAPL/pages/1586757704/MBR+Product+Metrics" target="_blank" rel="noopener noreferrer">Deep dive →</a>
               <div class="md-context">Jan 2026 platform total: $197,133 (vs budget $281,400, −29.9%). Maps Ops: $50,727 (+1.7% vs budget). Full-year budget: $3.84M.</div>
               <table class="mom-table">
-                <tr><th>Team</th><th>Jan ’26</th><th>Budget</th><th>Var</th></tr>
+                <tr><th>Team</th><th>Jan '26</th><th>Budget</th><th>Var</th></tr>
                 <tr><td>ODS</td><td>$75k</td><td>$103k</td><td style="color:#3b6d11">−27.5%</td></tr>
                 <tr><td>OPC</td><td>$60k</td><td>$98k</td><td style="color:#3b6d11">−38.9%</td></tr>
                 <tr><td>F&amp;R</td><td>$62k</td><td>$80k</td><td style="color:#3b6d11">−22.2%</td></tr>
@@ -299,7 +411,7 @@
           </div>
 
           <!-- 2. Orbis ACI Yield RM -->
-          <div class="metric-card">
+          <div class="metric-card" data-cid="m-aci" data-clabel="Orbis ACI Yield for RM" data-csection="metrics">
             <div class="metric-header" onclick="toggleMetric(this)">
               <span class="metric-status status-green"></span>
               <span class="mh-name">Orbis ACI Yield for RM</span>
@@ -311,15 +423,15 @@
               <div class="md-context">779 out of 832 accepted (93.6%), comfortably above 90% target. Steady improvement from 85% in Dec.</div>
               <table class="mom-table">
                 <tr><th>Month</th><th>Yield</th><th class="mom-bar-cell"></th></tr>
-                <tr><td class="mom-current">Feb ’26</td><td class="mom-current">93.6%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:94%;background:#639922"></div></div></td></tr>
-                <tr><td>Jan ’26</td><td>91%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:91%;background:#639922"></div></div></td></tr>
-                <tr><td>Dec ’25</td><td>85%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:85%;background:#ba7517"></div></div></td></tr>
+                <tr><td class="mom-current">Feb '26</td><td class="mom-current">93.6%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:94%;background:#639922"></div></div></td></tr>
+                <tr><td>Jan '26</td><td>91%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:91%;background:#639922"></div></div></td></tr>
+                <tr><td>Dec '25</td><td>85%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:85%;background:#ba7517"></div></div></td></tr>
               </table>
             </div>
           </div>
 
           <!-- 3. On-time delivery OS -->
-          <div class="metric-card">
+          <div class="metric-card" data-cid="m-otd-os" data-clabel="On-time delivery Orbis Sectioned" data-csection="metrics">
             <div class="metric-header" onclick="toggleMetric(this)">
               <span class="metric-status status-green"></span>
               <span class="mh-name">On-time delivery Orbis Sectioned</span>
@@ -331,15 +443,15 @@
               <div class="md-context">100% on-time delivery maintained for three consecutive months.</div>
               <table class="mom-table">
                 <tr><th>Month</th><th>Rate</th><th class="mom-bar-cell"></th></tr>
-                <tr><td class="mom-current">Feb ’26</td><td class="mom-current">100%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#639922"></div></div></td></tr>
-                <tr><td>Jan ’26</td><td>100%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#639922"></div></div></td></tr>
-                <tr><td>Dec ’25</td><td>100%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#639922"></div></div></td></tr>
+                <tr><td class="mom-current">Feb '26</td><td class="mom-current">100%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#639922"></div></div></td></tr>
+                <tr><td>Jan '26</td><td>100%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#639922"></div></div></td></tr>
+                <tr><td>Dec '25</td><td>100%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#639922"></div></div></td></tr>
               </table>
             </div>
           </div>
 
           <!-- 4. On-time delivery LM -->
-          <div class="metric-card">
+          <div class="metric-card" data-cid="m-otd-lm" data-clabel="On-time delivery LM map" data-csection="metrics">
             <div class="metric-header" onclick="toggleMetric(this)">
               <span class="metric-status status-green"></span>
               <span class="mh-name">On-time delivery LM map</span>
@@ -351,35 +463,35 @@
               <div class="md-context">Lane Model map delivery at 100% on-time since Jan 2026.</div>
               <table class="mom-table">
                 <tr><th>Month</th><th>Rate</th><th class="mom-bar-cell"></th></tr>
-                <tr><td class="mom-current">Feb ’26</td><td class="mom-current">100%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#639922"></div></div></td></tr>
-                <tr><td>Jan ’26</td><td>100%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#639922"></div></div></td></tr>
+                <tr><td class="mom-current">Feb '26</td><td class="mom-current">100%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#639922"></div></div></td></tr>
+                <tr><td>Jan '26</td><td>100%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#639922"></div></div></td></tr>
               </table>
             </div>
           </div>
 
           <!-- 5. E2E lead time LM -->
-          <div class="metric-card">
+          <div class="metric-card" data-cid="m-e2e-lm" data-clabel="E2E lead time LM map" data-csection="metrics">
             <div class="metric-header" onclick="toggleMetric(this)">
               <span class="metric-status status-red"></span>
               <span class="mh-name">E2E lead time LM map</span>
               <span class="mh-val">13.7 days</span>
               <span class="mh-delta delta-down">▲ target 7 days</span>
-              <a class="mh-link" href="https://m365.cloud.microsoft/chat/?titleId=T_6b9ec9cd-187e-0ab2-f87d-8db2c5dd0a95&amp;source=embedded-builder" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">Deep dive →</a>
               <span class="chevron">&#9654;</span>
             </div>
             <div class="metric-detail">
+              <a class="mh-link" href="https://tomtom.atlassian.net/wiki/spaces/MAPDATAPL/pages/1586757704/MBR+Product+Metrics" target="_blank" rel="noopener noreferrer">Deep dive →</a>
               <div class="md-context">Currently 13.68 days (target 7 days). Improved from 15.57 in Dec but still nearly 2x target. Dedicated workstream aims for stable, scalable weekly NDS release flow.</div>
               <table class="mom-table">
                 <tr><th>Month</th><th>Lead time</th><th class="mom-bar-cell"></th></tr>
-                <tr><td class="mom-current">Feb ’26</td><td class="mom-current">13.68d</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#e24b4a"></div></div></td></tr>
-                <tr><td>Jan ’26</td><td>12.9d</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:94%;background:#e24b4a"></div></div></td></tr>
-                <tr><td>Dec ’25</td><td>15.57d</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#e24b4a"></div></div></td></tr>
+                <tr><td class="mom-current">Feb '26</td><td class="mom-current">13.68d</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#e24b4a"></div></div></td></tr>
+                <tr><td>Jan '26</td><td>12.9d</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:94%;background:#e24b4a"></div></div></td></tr>
+                <tr><td>Dec '25</td><td>15.57d</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#e24b4a"></div></div></td></tr>
               </table>
             </div>
           </div>
 
           <!-- 6. Avg production issues per LM release -->
-          <div class="metric-card">
+          <div class="metric-card" data-cid="m-prod-issues" data-clabel="Avg production issues per LM release" data-csection="metrics">
             <div class="metric-header" onclick="toggleMetric(this)">
               <span class="metric-status status-green"></span>
               <span class="mh-name">Avg production issues per LM release</span>
@@ -391,56 +503,56 @@
               <div class="md-context">0.66 production issues per release in Feb, within the &lt;1 target. Jan had zero issues.</div>
               <table class="mom-table">
                 <tr><th>Month</th><th>Issues/release</th><th class="mom-bar-cell"></th></tr>
-                <tr><td class="mom-current">Feb ’26</td><td class="mom-current">0.66</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:66%;background:#639922"></div></div></td></tr>
-                <tr><td>Jan ’26</td><td>0</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:2%;background:#639922"></div></div></td></tr>
+                <tr><td class="mom-current">Feb '26</td><td class="mom-current">0.66</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:66%;background:#639922"></div></div></td></tr>
+                <tr><td>Jan '26</td><td>0</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:2%;background:#639922"></div></div></td></tr>
               </table>
             </div>
           </div>
 
           <!-- 7. Avg platform cost per hosted layer -->
-          <div class="metric-card">
+          <div class="metric-card" data-cid="m-cost-layer" data-clabel="Avg platform cost per hosted layer" data-csection="metrics">
             <div class="metric-header" onclick="toggleMetric(this)">
               <span class="metric-status status-amber"></span>
               <span class="mh-name">Avg platform cost per hosted layer</span>
               <span class="mh-val">$510</span>
               <span class="mh-delta delta-down">▲ target $345</span>
-              <a class="mh-link" href="https://m365.cloud.microsoft/chat/?titleId=T_6b9ec9cd-187e-0ab2-f87d-8db2c5dd0a95&amp;source=embedded-builder" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">Deep dive →</a>
               <span class="chevron">&#9654;</span>
             </div>
             <div class="metric-detail">
+              <a class="mh-link" href="https://tomtom.atlassian.net/wiki/spaces/MAPDATAPL/pages/1578107210/Average+platform+cost+per+hosted+layer" target="_blank" rel="noopener noreferrer">Deep dive →</a>
               <div class="md-context">$510 per hosted layer in Feb (target $345). Trending down from $564 in Dec. ARM migration (one team, 40% of budget) expected to reduce batch costs by ~30%.</div>
               <table class="mom-table">
                 <tr><th>Month</th><th>Cost</th><th class="mom-bar-cell"></th></tr>
-                <tr><td class="mom-current">Feb ’26</td><td class="mom-current">$510</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#ba7517"></div></div></td></tr>
-                <tr><td>Jan ’26</td><td>$551</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#ba7517"></div></div></td></tr>
-                <tr><td>Dec ’25</td><td>$564</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#e24b4a"></div></div></td></tr>
+                <tr><td class="mom-current">Feb '26</td><td class="mom-current">$510</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#ba7517"></div></div></td></tr>
+                <tr><td>Jan '26</td><td>$551</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#ba7517"></div></div></td></tr>
+                <tr><td>Dec '25</td><td>$564</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#e24b4a"></div></div></td></tr>
               </table>
             </div>
           </div>
 
           <!-- 8. Prevented bad edits -->
-          <div class="metric-card">
+          <div class="metric-card" data-cid="m-prevented" data-clabel="Prevented bad edits" data-csection="metrics">
             <div class="metric-header" onclick="toggleMetric(this)">
               <span class="metric-status status-green"></span>
               <span class="mh-name">Prevented bad edits</span>
               <span class="mh-val">62.6%</span>
               <span class="mh-delta delta-up">▲ target ≥60%</span>
-              <a class="mh-link" href="https://m365.cloud.microsoft/chat/?titleId=T_6b9ec9cd-187e-0ab2-f87d-8db2c5dd0a95&amp;source=embedded-builder" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">Deep dive →</a>
               <span class="chevron">&#9654;</span>
             </div>
             <div class="metric-detail">
+              <a class="mh-link" href="https://tomtom.atlassian.net/wiki/x/lQAqHQ" target="_blank" rel="noopener noreferrer">Deep dive →</a>
               <div class="md-context">62.6% in Feb (target ≥60%). ML precision ~35%, ~33% of leads fixed by OSM community, ~55% reviewed on average. MLP 2.0 investments in model versioning and retraining target precision gains in Q2.</div>
               <table class="mom-table">
                 <tr><th>Month</th><th>Rate</th><th>vs Target (≥60%)</th><th class="mom-bar-cell"></th></tr>
-                <tr><td class="mom-current">Feb ’26</td><td class="mom-current">62.6%</td><td style="color:#3b6d11">+2.6pp</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:63%;background:#639922"></div></div></td></tr>
-                <tr><td>Jan ’26</td><td>60.3%</td><td style="color:#3b6d11">+0.3pp</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:60%;background:#639922"></div></div></td></tr>
-                <tr><td>Dec ’25</td><td>64.7%</td><td style="color:#3b6d11">+4.7pp</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:65%;background:#639922"></div></div></td></tr>
+                <tr><td class="mom-current">Feb '26</td><td class="mom-current">62.6%</td><td style="color:#3b6d11">+2.6pp</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:63%;background:#639922"></div></div></td></tr>
+                <tr><td>Jan '26</td><td>60.3%</td><td style="color:#3b6d11">+0.3pp</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:60%;background:#639922"></div></div></td></tr>
+                <tr><td>Dec '25</td><td>64.7%</td><td style="color:#3b6d11">+4.7pp</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:65%;background:#639922"></div></div></td></tr>
               </table>
             </div>
           </div>
 
           <!-- 9. Quarantine avg lead time -->
-          <div class="metric-card">
+          <div class="metric-card" data-cid="m-quarantine" data-clabel="Quarantine avg lead time" data-csection="metrics">
             <div class="metric-header" onclick="toggleMetric(this)">
               <span class="metric-status status-amber"></span>
               <span class="mh-name">Quarantine avg lead time</span>
@@ -452,44 +564,44 @@
               <div class="md-context">26.2h in Feb, improving from 30.1h in Jan but still above the 24h target. Quarantine discovery focuses on improving lock management and release control.</div>
               <table class="mom-table">
                 <tr><th>Month</th><th>Lead time</th><th class="mom-bar-cell"></th></tr>
-                <tr><td class="mom-current">Feb ’26</td><td class="mom-current">26.2h</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#ba7517"></div></div></td></tr>
-                <tr><td>Jan ’26</td><td>30.1h</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#e24b4a"></div></div></td></tr>
-                <tr><td>Dec ’25</td><td>28.3h</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#e24b4a"></div></div></td></tr>
+                <tr><td class="mom-current">Feb '26</td><td class="mom-current">26.2h</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#ba7517"></div></div></td></tr>
+                <tr><td>Jan '26</td><td>30.1h</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#e24b4a"></div></div></td></tr>
+                <tr><td>Dec '25</td><td>28.3h</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#e24b4a"></div></div></td></tr>
               </table>
             </div>
           </div>
 
           <!-- 10. Operator readiness on day 1 -->
-          <div class="metric-card">
+          <div class="metric-card" data-cid="m-op-readiness" data-clabel="Operator readiness on day 1" data-csection="metrics">
             <div class="metric-header" onclick="toggleMetric(this)">
               <span class="metric-status status-red"></span>
               <span class="mh-name">Operator readiness on day 1</span>
               <span class="mh-val">16%</span>
               <span class="mh-delta delta-down">▼ target 90%</span>
-              <a class="mh-link" href="https://m365.cloud.microsoft/chat/?titleId=T_6b9ec9cd-187e-0ab2-f87d-8db2c5dd0a95&amp;source=embedded-builder" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">Deep dive →</a>
               <span class="chevron">&#9654;</span>
             </div>
             <div class="metric-detail">
+              <a class="mh-link" href="https://tomtom.atlassian.net/wiki/spaces/MAPDATAPL/pages/551686125/Final+Metrics+-+WMR+and+BRs+2025" target="_blank" rel="noopener noreferrer">Deep dive →</a>
               <div class="md-context">16% in Feb (was 25% in Dec). Target is 90%. Training Environment MVP scope agreed, delivery scheduled for March. Compatible with RM Lanes training packages initially.</div>
               <table class="mom-table">
                 <tr><th>Month</th><th>Readiness</th><th class="mom-bar-cell"></th></tr>
-                <tr><td class="mom-current">Feb ’26</td><td class="mom-current">16%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:16%;background:#e24b4a"></div></div></td></tr>
-                <tr><td>Dec ’25</td><td>25%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:25%;background:#e24b4a"></div></div></td></tr>
+                <tr><td class="mom-current">Feb '26</td><td class="mom-current">16%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:16%;background:#e24b4a"></div></div></td></tr>
+                <tr><td>Dec '25</td><td>25%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:25%;background:#e24b4a"></div></div></td></tr>
               </table>
             </div>
           </div>
 
           <!-- 11. Platform contribution to operator efficiency -->
-          <div class="metric-card">
+          <div class="metric-card" data-cid="m-op-efficiency" data-clabel="Platform contrib. to operator efficiency" data-csection="metrics">
             <div class="metric-header" onclick="toggleMetric(this)">
               <span class="metric-status status-red"></span>
               <span class="mh-name">Platform contrib. to operator efficiency</span>
               <span class="mh-val">0%</span>
               <span class="mh-delta delta-down">▼ target 10%</span>
-              <a class="mh-link" href="https://m365.cloud.microsoft/chat/?titleId=T_6b9ec9cd-187e-0ab2-f87d-8db2c5dd0a95&amp;source=embedded-builder" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">Deep dive →</a>
               <span class="chevron">&#9654;</span>
             </div>
             <div class="metric-detail">
+              <a class="mh-link" href="https://tomtom.atlassian.net/wiki/spaces/MAPDATAPL/pages/755469510/Key+Metrics+FnR+-+2026+H1" target="_blank" rel="noopener noreferrer">Deep dive →</a>
               <div class="md-context">0% contribution in Jan and Feb (target 10% for H1 2026). Vertex Top 10 OPS improvements: 5 of 10 completed and released (Q1 milestone achieved). Workflow Templates, Geolocking v1.1, OrbIT self-service pushed to Q2 due to Training Environment priority shift.</div>
             </div>
           </div>
@@ -498,11 +610,11 @@
 
         <!-- HDT section -->
         <div id="sec-hdt" class="section">
-          <div class="digest-card" style="border-left: 3px solid #378add; border-radius: 0 var(--radius-lg) var(--radius-lg) 0;">
+          <div class="digest-card" data-cid="hdt-status" data-clabel="HDT status" data-csection="hdt" style="border-left: 3px solid #378add; border-radius: 0 var(--radius-lg) var(--radius-lg) 0;">
             <div class="dc-label">Status</div>
             <div class="dc-body">No hotly debated topics this month. Previous HDTs (HD product lines, Vertex evaluation tool, GEMS, Amazon Last Mile) have been resolved or transitioned into regular workstreams.</div>
           </div>
-          <div class="digest-card">
+          <div class="digest-card" data-cid="hdt-highway" data-clabel="Highway-only product" data-csection="hdt">
             <div class="collapsible-toggle" onclick="toggleCollapse(this)">
               <div class="dc-label" style="margin-bottom:0">Note — Highway-only product (ongoing)</div>
               <span class="chevron">&#9654;</span>
@@ -517,20 +629,20 @@
 
         <!-- Risks section -->
         <div id="sec-risks" class="section">
-          <div class="digest-card" style="border-left: 3px solid #e24b4a; border-radius: 0 var(--radius-lg) var(--radius-lg) 0;">
+          <div class="digest-card" data-cid="risk-violation" data-clabel="Risk 1 — Violation Store readiness" data-csection="risks" style="border-left: 3px solid #e24b4a; border-radius: 0 var(--radius-lg) var(--radius-lg) 0;">
             <div class="collapsible-toggle" onclick="toggleCollapse(this)">
               <div class="dc-label" style="margin-bottom:0">Risk 1 — Violation Store readiness &amp; CC downstream integration</div>
               <span class="chevron">&#9654;</span>
             </div>
             <div class="dc-body" style="margin-top:8px">OPS violation resolution is at <strong>increasing risk</strong> as scope expands beyond lanes to routing features (speeds, one-ways, control access). In the current model, OPS can only start resolving violations after product completion, leaving very limited time before customer delivery. <strong>Not feasible at current and expected volumes.</strong></div>
             <div class="collapsible-detail">
-              <p>Upstream adoption of CC rules across value streams is currently weak and has known feature gaps (e.g., teams needing a “bound state of multiple layers” to perform CC rules upstream). Downstream OPS continues to absorb violations across value streams exceeding available resources.</p>
-              <p>Clustering improves throughput by bundling violations into a single task, but clusters mix severities (critical, warnings, false positives) and the system treats all tasks as equal. Severity information exists in RMS but is not available in CC run outputs used operationally. Outside of Toyota, there is no consistent “master rule list” with severity tagging.</p>
+              <p>Upstream adoption of CC rules across value streams is currently weak and has known feature gaps (e.g., teams needing a "bound state of multiple layers" to perform CC rules upstream). Downstream OPS continues to absorb violations across value streams exceeding available resources.</p>
+              <p>Clustering improves throughput by bundling violations into a single task, but clusters mix severities (critical, warnings, false positives) and the system treats all tasks as equal. Severity information exists in RMS but is not available in CC run outputs used operationally. Outside of Toyota, there is no consistent "master rule list" with severity tagging.</p>
               <p>This creates a <strong>prioritization risk</strong> (OPS cannot focus on highest-impact items) and a <strong>reporting/traceability risk</strong>, especially for Toyota quality reporting. Violation Store is expected to mitigate this by preserving violation history and enabling false-positive stamping.</p>
               <p><strong>Recommendation:</strong> Treat as a delivery and customer-commitment risk (Toyota in particular). Prioritize: (1) CC downstream → Violation Store ingestion with false-positive stamping, (2) severity-based prioritization using CC team severity list, (3) find owner for severity metadata exposure, (4) structured plan to increase upstream CC adoption.</p>
             </div>
           </div>
-          <div class="digest-card" style="border-left: 3px solid #e24b4a; border-radius: 0 var(--radius-lg) var(--radius-lg) 0;">
+          <div class="digest-card" data-cid="risk-lm-feedback" data-clabel="Risk 2 — Unifying LM feedback" data-csection="risks" style="border-left: 3px solid #e24b4a; border-radius: 0 var(--radius-lg) var(--radius-lg) 0;">
             <div class="collapsible-toggle" onclick="toggleCollapse(this)">
               <div class="dc-label" style="margin-bottom:0">Risk 2 — Unifying customer feedback for LM product</div>
               <span class="chevron">&#9654;</span>
@@ -547,34 +659,45 @@
 
         <!-- Customers section -->
         <div id="sec-customers" class="section">
-          <div class="digest-card">
+          <div class="digest-card" data-cid="cust-toyota" data-clabel="Toyota" data-csection="customers">
             <div class="dc-label">Toyota</div>
-            <div class="dc-body">Strong focus on <strong>map freshness</strong>, looking at daily updates. Starting with monthly updates but limited by AISIN’s quarterly cycles. Next major metrics meeting in <strong>May</strong>.</div>
+            <div class="dc-body">Strong focus on <strong>map freshness</strong>, looking at daily updates. Starting with monthly updates but limited by AISIN's quarterly cycles. Next major metrics meeting in <strong>May</strong>.</div>
           </div>
-          <div class="digest-card">
+          <div class="digest-card" data-cid="cust-cariad" data-clabel="CARIAD / Volkswagen Group" data-csection="customers">
             <div class="dc-label">CARIAD / Volkswagen Group</div>
             <div class="dc-body">CARIAD requests more <strong>developer-focused release notes</strong> with delivered map content scope and deeper insights into compiled map quality. Expects quality metrics covering compiled map, not just source data. Evaluating <strong>3 BYOD layers</strong>. Porsche has no strict data limits; Audi and CARIAD value detailed freshness discussions.</div>
           </div>
-          <div class="digest-card">
+          <div class="digest-card" data-cid="cust-tesla" data-clabel="Tesla" data-csection="customers">
             <div class="dc-label">Tesla</div>
             <div class="dc-body">Wants a <strong>15-minute update cycle</strong> via fleet/social-media detection. Needs Orbis OGP docs and CA sample map. <strong>BYOD + GEM onboarding</strong> plan coming (with Stellantis).</div>
           </div>
-          <div class="digest-card">
+          <div class="digest-card" data-cid="cust-hyundai" data-clabel="Hyundai Motor Group" data-csection="customers">
             <div class="dc-label">Hyundai Motor Group</div>
             <div class="dc-body">Evaluating move to Orbis, needs <strong>stable IDs</strong>. Priorities: Lane Guidance, Routing, Traffic, 3D visuals. HAE wants <strong>daily changelets</strong>; system supports weekly.</div>
           </div>
-          <div class="digest-card">
+          <div class="digest-card" data-cid="cust-others" data-clabel="Other OEMs" data-csection="customers">
             <div class="dc-label">Other OEMs</div>
             <div class="dc-body"><strong>Volvo:</strong> Highways-only map delayed to Nov 2026, evaluating AllRoads vs highways-only. <strong>Mercedes:</strong> Interested in highways-only, still evaluating. <strong>Honda:</strong> Workshop done; uses quarterly NDS.Live, needs quality assurance before streaming.</div>
           </div>
-          <div class="digest-card">
+          <div class="digest-card" data-cid="cust-byod" data-clabel="BYOD / GEM prospects" data-csection="customers">
             <div class="dc-label">BYOD / GEM prospects</div>
             <div class="dc-body"><strong>Ford:</strong> Struggles merging HERE with others, exploring BYOD or GERS+GEM. <strong>Unipol:</strong> Interested in self-hosted GEM, H2 availability. <strong>MS2:</strong> Reviewing GEM, AADT integration, New Mexico dataset ready. <strong>LTA Singapore:</strong> Defining next GEM steps. <strong>Arity:</strong> Extending PBF with LR offsets.</div>
           </div>
-          <div class="digest-card">
+          <div class="digest-card" data-cid="cust-value-stream" data-clabel="Value stream perspective" data-csection="customers">
             <div class="dc-label">Value stream perspective</div>
-            <div class="dc-body"><strong>Geopol/Area:</strong> 2x–7x slowdown on large read operations near State Reader. Believe multi-tenancy would lower DiSCOS bill. <strong>Geopol/APT/POIs:</strong> DiSCOS auto-scaling states don’t scale back automatically. <strong>POIs/APT:</strong> Credential rotations not communicated, causing downtime. <strong>HD Basemap:</strong> Consistency check disabled in CoW due to throughput limits; onboarding 120 new ADAS staff hampered by poor documentation.</div>
+            <div class="dc-body"><strong>Geopol/Area:</strong> 2x–7x slowdown on large read operations near State Reader. Believe multi-tenancy would lower DiSCOS bill. <strong>Geopol/APT/POIs:</strong> DiSCOS auto-scaling states don't scale back automatically. <strong>POIs/APT:</strong> Credential rotations not communicated, causing downtime. <strong>HD Basemap:</strong> Consistency check disabled in CoW due to throughput limits; onboarding 120 new ADAS staff hampered by poor documentation.</div>
           </div>
+        </div>
+
+        <!-- Comments section -->
+        <div id="sec-comments" class="section">
+          <div class="comments-toolbar">
+            <button class="cf-btn active" onclick="filterComments('all', this)">All</button>
+            <button class="cf-btn" onclick="filterComments('in-review', this)">Needs answer in review</button>
+            <button class="cf-btn" onclick="filterComments('afterwards', this)">Needs answer later</button>
+            <button class="cf-btn" onclick="filterComments('answered', this)">Answered</button>
+          </div>
+          <div id="comments-list"></div>
         </div>
 
       </div><!-- /content -->
@@ -590,7 +713,41 @@
   </div><!-- /shell -->
 </div><!-- /app -->
 
+<!-- Comment modal -->
+<div class="comment-overlay" id="comment-overlay" onclick="handleOverlayClick(event)">
+  <div class="comment-modal">
+    <div class="cm-header">
+      <div>
+        <div class="cm-title">Add a comment</div>
+        <div class="cm-subtitle" id="cm-card-label"></div>
+      </div>
+      <button class="cm-close" onclick="closeCommentModal()">&#10005;</button>
+    </div>
+    <div class="cm-field">
+      <div class="cm-label">Your name</div>
+      <input class="cm-input" id="cm-author" type="text" placeholder="e.g. Maria" autocomplete="off" />
+    </div>
+    <div class="cm-field">
+      <div class="cm-label">Comment / question</div>
+      <textarea class="cm-textarea" id="cm-text" placeholder="What do you want to flag or ask?"></textarea>
+    </div>
+    <div class="cm-field">
+      <div class="cm-label">When does this need an answer?</div>
+      <div class="cm-radios">
+        <label class="cm-radio"><input type="radio" name="cm-timing" value="in-review" checked> During this review</label>
+        <label class="cm-radio"><input type="radio" name="cm-timing" value="afterwards"> After the review</label>
+      </div>
+    </div>
+    <div class="cm-actions">
+      <button class="btn btn-secondary" onclick="closeCommentModal()">Cancel</button>
+      <button class="btn btn-primary" id="cm-submit-btn" onclick="submitComment()">Add comment</button>
+    </div>
+  </div>
+</div>
+
 <script>
+// ── Existing UI functions ─────────────────────────────────────────────────────
+
 function toggleMetric(el) {
   el.classList.toggle('open');
   const detail = el.nextElementSibling;
@@ -608,9 +765,251 @@ function showSection(id, el) {
   el.classList.add('active');
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById('sec-' + id).classList.add('active');
-  const titles = { summary: 'Executive summary', metrics: 'Metrics', hdt: 'Hotly debated topics', risks: 'Risks', customers: 'Voice of the customer' };
-  document.getElementById('section-title').textContent = titles[id];
+  const titles = {
+    summary: 'Executive summary', metrics: 'Metrics',
+    hdt: 'Hotly debated topics', risks: 'Risks',
+    customers: 'Voice of the customer', comments: 'Comments'
+  };
+  document.getElementById('section-title').textContent = titles[id] || id;
+  if (id === 'comments') renderCommentsSection();
 }
+
+// ── Comments state ────────────────────────────────────────────────────────────
+
+let allComments = [];
+let currentFilter = 'all';
+let currentModal = { cid: null, clabel: null, csection: null };
+
+const SECTION_LABELS = {
+  summary: 'Executive summary', metrics: 'Metrics',
+  hdt: 'Hotly debated topics', risks: 'Risks',
+  customers: 'Voice of the customer'
+};
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+
+function initCommentButtons() {
+  document.querySelectorAll('[data-cid]').forEach(card => {
+    const cid = card.dataset.cid;
+    const clabel = card.dataset.clabel;
+    const csection = card.dataset.csection;
+
+    const btn = document.createElement('button');
+    btn.className = 'comment-trigger';
+    btn.id = 'ctrigger-' + cid;
+    btn.innerHTML =
+      '<svg width="11" height="11" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+      '<path d="M2 2h12v9H9l-3 3v-3H2V2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>' +
+      '<span id="ctcount-' + cid + '" class="ctrigger-count"></span>';
+    btn.title = 'Add comment to: ' + clabel;
+    btn.onclick = function(e) {
+      e.stopPropagation();
+      openCommentModal(cid, clabel, csection);
+    };
+
+    if (card.classList.contains('metric-card')) {
+      // Inline in the header row, before the chevron
+      const header = card.querySelector('.metric-header');
+      const chevron = header.querySelector('.chevron');
+      header.insertBefore(btn, chevron);
+    } else {
+      // Absolute-positioned in top-right corner of the digest card
+      card.appendChild(btn);
+    }
+  });
+}
+
+async function loadComments() {
+  try {
+    const res = await fetch('/api/comments');
+    allComments = await res.json();
+    updateBadges();
+    if (document.getElementById('sec-comments').classList.contains('active')) {
+      renderCommentsSection();
+    }
+  } catch (e) {
+    console.error('Failed to load comments', e);
+  }
+}
+
+// ── Badges ───────────────────────────────────────────────────────────────────
+
+function updateBadges() {
+  // Per-card trigger buttons
+  document.querySelectorAll('[data-cid]').forEach(card => {
+    const cid = card.dataset.cid;
+    const btn = document.getElementById('ctrigger-' + cid);
+    const countEl = document.getElementById('ctcount-' + cid);
+    if (!btn || !countEl) return;
+    const open = allComments.filter(c => c.cardId === cid && c.status === 'open').length;
+    countEl.textContent = open > 0 ? open : '';
+    btn.classList.toggle('has-comments', open > 0);
+  });
+
+  // Sidebar nav badge
+  const openTotal = allComments.filter(c => c.status === 'open').length;
+  const navBadge = document.getElementById('comments-nav-badge');
+  navBadge.textContent = openTotal;
+  navBadge.style.display = openTotal > 0 ? 'inline-block' : 'none';
+
+  // Topbar badge
+  const topBadge = document.getElementById('open-comments-badge');
+  topBadge.textContent = openTotal + ' open';
+  topBadge.style.display = allComments.length > 0 ? 'inline-block' : 'none';
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+
+function openCommentModal(cid, clabel, csection) {
+  currentModal = { cid, clabel, csection };
+  document.getElementById('cm-card-label').textContent =
+    (SECTION_LABELS[csection] || csection) + ' · ' + clabel;
+  document.getElementById('comment-overlay').classList.add('open');
+  const author = document.getElementById('cm-author');
+  setTimeout(() => { (author.value ? document.getElementById('cm-text') : author).focus(); }, 50);
+}
+
+function closeCommentModal() {
+  document.getElementById('comment-overlay').classList.remove('open');
+  document.getElementById('cm-text').value = '';
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('comment-overlay')) closeCommentModal();
+}
+
+async function submitComment() {
+  const author = document.getElementById('cm-author').value.trim();
+  const text = document.getElementById('cm-text').value.trim();
+  const timing = document.querySelector('input[name="cm-timing"]:checked').value;
+  if (!author) { document.getElementById('cm-author').focus(); return; }
+  if (!text)   { document.getElementById('cm-text').focus(); return; }
+
+  const submitBtn = document.getElementById('cm-submit-btn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Adding…';
+
+  try {
+    const res = await fetch('/api/comments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        author, text, timing,
+        section: currentModal.csection,
+        cardLabel: currentModal.clabel,
+        cardId: currentModal.cid,
+      }),
+    });
+    if (!res.ok) throw new Error('Server error');
+    allComments.push(await res.json());
+    updateBadges();
+    closeCommentModal();
+    // Navigate to comments section
+    showSection('comments', document.getElementById('nav-comments'));
+  } catch {
+    alert('Failed to save comment. Please try again.');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Add comment';
+  }
+}
+
+// ── Comments section ──────────────────────────────────────────────────────────
+
+function filterComments(filter, btnEl) {
+  currentFilter = filter;
+  document.querySelectorAll('.cf-btn').forEach(b => b.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
+  renderCommentsSection();
+}
+
+function renderCommentsSection() {
+  const list = document.getElementById('comments-list');
+  if (!list) return;
+
+  let filtered = allComments;
+  if (currentFilter === 'in-review')  filtered = allComments.filter(c => c.timing === 'in-review' && c.status === 'open');
+  if (currentFilter === 'afterwards') filtered = allComments.filter(c => c.timing === 'afterwards' && c.status === 'open');
+  if (currentFilter === 'answered')   filtered = allComments.filter(c => c.status === 'answered');
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="comments-empty">No comments' +
+      (currentFilter !== 'all' ? ' for this filter' : ' yet — use the comment buttons on any card to add one') + '.</div>';
+    return;
+  }
+
+  const sorted = [...filtered].sort((a, b) => {
+    if (a.status !== b.status) return a.status === 'open' ? -1 : 1;
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
+  list.innerHTML = sorted.map(c => {
+    const timingLabel = c.timing === 'in-review' ? 'Needs answer in review' : 'Needs answer later';
+    const sectionLabel = SECTION_LABELS[c.section] || c.section;
+    return `
+      <div class="comment-item ${c.status}" id="ci-${c.id}">
+        <div class="ci-meta">
+          <span class="ci-author">${esc(c.author)}</span>
+          <span class="ci-breadcrumb">${esc(sectionLabel)} › ${esc(c.cardLabel)}</span>
+          <span class="ci-time-badge ${c.timing}">${timingLabel}</span>
+          <span class="ci-status-badge ${c.status}">${c.status === 'open' ? 'Open' : 'Answered'}</span>
+        </div>
+        <div class="ci-text">${esc(c.text)}</div>
+        <div class="ci-actions">
+          <button class="ci-btn ${c.status === 'open' ? 'answer-btn' : ''}" onclick="toggleAnswered('${c.id}')">
+            ${c.status === 'open' ? 'Mark as answered' : 'Reopen'}
+          </button>
+          <button class="ci-btn delete-btn" onclick="deleteComment('${c.id}')">Delete</button>
+          <span class="ci-timestamp">${formatTime(c.createdAt)}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function toggleAnswered(id) {
+  try {
+    const res = await fetch('/api/comments/' + id + '/answered', { method: 'PATCH' });
+    if (!res.ok) throw new Error();
+    const updated = await res.json();
+    const idx = allComments.findIndex(c => c.id === id);
+    if (idx !== -1) allComments[idx] = updated;
+    updateBadges();
+    renderCommentsSection();
+  } catch { alert('Failed to update comment.'); }
+}
+
+async function deleteComment(id) {
+  if (!confirm('Delete this comment?')) return;
+  try {
+    const res = await fetch('/api/comments/' + id, { method: 'DELETE' });
+    if (!res.ok) throw new Error();
+    allComments = allComments.filter(c => c.id !== id);
+    updateBadges();
+    renderCommentsSection();
+  } catch { alert('Failed to delete comment.'); }
+}
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+
+function esc(str) {
+  return String(str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function formatTime(isoStr) {
+  const diff = Math.floor((Date.now() - new Date(isoStr)) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  return new Date(isoStr).toLocaleDateString();
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+
+initCommentButtons();
+loadComments();
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCommentModal(); });
 </script>
 </body>
 </html>
