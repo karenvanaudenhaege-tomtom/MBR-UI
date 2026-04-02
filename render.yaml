@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: mbr-ui
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-sonnet-4-20250514
