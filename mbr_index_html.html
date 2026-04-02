@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Orbis Platform MBR · Feb 2025</title>
+<title>Orbis Platform MBR · Feb 2026</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -123,49 +123,79 @@
   .delta-up   { color: #3b6d11; }
   .delta-down { color: #a32d2d; }
 
+  /* ── Dashboard ── */
+  .metric-card {
+    background: var(--bg-secondary); border: 0.5px solid var(--border-light);
+    border-radius: var(--radius-lg); overflow: hidden;
+  }
+  .metric-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; cursor: pointer; user-select: none;
+  }
+  .metric-header:hover { background: var(--bg-tertiary); }
+  .metric-status { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .status-green { background: #639922; }
+  .status-amber { background: #ba7517; }
+  .status-red   { background: #e24b4a; }
+  .metric-header .mh-name { flex: 1; font-size: 13px; font-weight: 500; }
+  .metric-header .mh-val { font-size: 13px; font-weight: 600; margin-right: 4px; }
+  .metric-header .mh-delta { font-size: 11px; margin-right: 8px; }
+  .metric-header .mh-link { font-size: 11px; color: var(--text-info); text-decoration: none; margin-right: 8px; }
+  .metric-header .mh-link:hover { text-decoration: underline; }
+  .metric-header .chevron { font-size: 11px; color: var(--text-tertiary); transition: transform 0.2s; }
+  .metric-header.open .chevron { transform: rotate(90deg); }
+  .metric-detail { display: none; padding: 0 16px 14px; }
+  .metric-detail.open { display: block; }
+  .metric-detail .md-context { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 10px; }
+
+  /* MoM trend table */
+  .mom-table { width: 100%; border-collapse: collapse; }
+  .mom-table th { font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.03em; text-align: left; padding: 4px 6px; border-bottom: 0.5px solid var(--border-light); font-weight: 400; }
+  .mom-table td { font-size: 12px; color: var(--text-secondary); padding: 5px 6px; border-bottom: 0.5px solid var(--border-light); }
+  .mom-table tr:last-child td { border-bottom: none; }
+  .mom-table .mom-current { font-weight: 600; color: var(--text-primary); }
+  .mom-bar-cell { width: 80px; }
+  .mom-bar-track { width: 100%; height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden; }
+  .mom-bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+
+  /* Cloud breakdown */
+  .cloud-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .cloud-bar-label { font-size: 12px; color: var(--text-secondary); width: 40px; flex-shrink: 0; }
+  .cloud-bar-track { flex: 1; height: 16px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden; position: relative; }
+  .cloud-bar-fill { height: 100%; border-radius: 4px; }
+  .cloud-bar-val { font-size: 11px; color: var(--text-secondary); width: 48px; text-align: right; flex-shrink: 0; }
+  .cloud-bar-budget { font-size: 10px; color: var(--text-tertiary); width: 70px; text-align: right; flex-shrink: 0; }
+
+  /* Collapsible cards */
+  .collapsible-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+  .collapsible-toggle .chevron { font-size: 12px; color: var(--text-tertiary); transition: transform 0.2s; }
+  .collapsible-toggle.open .chevron { transform: rotate(90deg); }
+  .collapsible-detail { display: none; margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--border-light); font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+  .collapsible-detail.open { display: block; }
+  .collapsible-detail p { margin-bottom: 8px; }
+  .collapsible-detail p:last-child { margin-bottom: 0; }
+
   /* Sections that are hidden by default */
   .section { display: none; }
   .section.active { display: flex; flex-direction: column; gap: 12px; }
-  #sec-summary { display: flex; flex-direction: column; gap: 12px; }
 
-  /* ── Chat area ── */
-  .chat-area { border-top: 0.5px solid var(--border-light); display: flex; flex-direction: column; max-height: 220px; }
-  .chat-msgs { flex: 1; overflow-y: auto; padding: 10px 20px; display: flex; flex-direction: column; gap: 10px; }
-  .msg { max-width: 88%; }
-  .msg.user { align-self: flex-end; }
-  .msg.bot  { align-self: flex-start; }
-  .msg-bubble { padding: 8px 12px; font-size: 13px; line-height: 1.5; }
-  .msg.user .msg-bubble { background: var(--bg-info); color: var(--text-primary); border-radius: 12px 12px 2px 12px; }
-  .msg.bot  .msg-bubble { background: var(--bg-secondary); border: 0.5px solid var(--border-light); color: var(--text-primary); border-radius: 12px 12px 12px 2px; }
-  .msg-name { font-size: 11px; color: var(--text-tertiary); margin-bottom: 3px; }
-  .chip-row { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 20px 0; }
-  .chip {
-    padding: 5px 12px; border-radius: 99px;
-    border: 0.5px solid var(--border-mid);
-    font-size: 12px; color: var(--text-secondary);
-    cursor: pointer; background: var(--bg-primary);
-    transition: background 0.1s;
+  /* ── Copilot link bar ── */
+  .copilot-bar {
+    border-top: 0.5px solid var(--border-light);
+    padding: 12px 20px;
+    display: flex; align-items: center; gap: 10px;
   }
-  .chip:hover { background: var(--bg-secondary); color: var(--text-primary); }
-  .chat-input-row { display: flex; gap: 8px; padding: 10px 16px 12px; border-top: 0.5px solid var(--border-light); }
-  .chat-input-row input {
-    flex: 1; font-size: 13px; padding: 7px 12px;
-    border: 0.5px solid var(--border-mid); border-radius: var(--radius-md);
-    background: var(--bg-primary); color: var(--text-primary);
-    outline: none; font-family: var(--font);
+  .copilot-bar .copilot-icon {
+    width: 20px; height: 20px; flex-shrink: 0;
   }
-  .chat-input-row input:focus { border-color: #378add; }
-  .send-btn {
-    padding: 7px 14px; border: 0.5px solid var(--border-mid);
-    border-radius: var(--radius-md); background: var(--bg-primary);
-    color: var(--text-primary); font-size: 13px; cursor: pointer;
+  .copilot-bar a {
+    font-size: 13px; color: var(--text-info); text-decoration: none; font-weight: 500;
   }
-  .send-btn:hover { background: var(--bg-secondary); }
-  .dot-anim { display: flex; gap: 3px; align-items: center; }
-  .dot-anim span { width: 5px; height: 5px; border-radius: 50%; background: var(--text-tertiary); animation: blink 1.2s infinite; }
-  .dot-anim span:nth-child(2) { animation-delay: 0.2s; }
-  .dot-anim span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes blink { 0%,80%,100% { opacity: 0.3; } 40% { opacity: 1; } }
+  .copilot-bar a:hover { text-decoration: underline; }
+  .copilot-bar .copilot-hint {
+    font-size: 12px; color: var(--text-tertiary); margin-left: auto;
+  }
+
 </style>
 </head>
 <body>
@@ -178,19 +208,19 @@
     <div class="sidebar">
       <div class="sidebar-header">
         <div class="lbl">Orbis Platform</div>
-        <div class="ttl">MBR · Feb 2025</div>
-        <div class="sub">Review period: Jan 2025</div>
+        <div class="ttl">MBR · Feb 2026</div>
+        <div class="sub">Review period: Jan 2026</div>
       </div>
       <div class="nav-section">
         <div class="sec-lbl">Sections</div>
         <div class="nav-item active" onclick="showSection('summary', this)"><span class="nav-dot dot-blue"></span>Executive summary</div>
         <div class="nav-item" onclick="showSection('metrics', this)"><span class="nav-dot dot-blue"></span>Metrics</div>
-        <div class="nav-item" onclick="showSection('hdt', this)"><span class="nav-dot dot-amber"></span>Hotly debated topics</div>
+        <div class="nav-item" onclick="showSection('hdt', this)"><span class="nav-dot dot-blue"></span>Hotly debated topics</div>
         <div class="nav-item" onclick="showSection('risks', this)"><span class="nav-dot dot-red"></span>Risks</div>
-        <div class="nav-item" onclick="showSection('customers', this)"><span class="nav-dot dot-green"></span>Customer deep dives</div>
+        <div class="nav-item" onclick="showSection('customers', this)"><span class="nav-dot dot-green"></span>Voice of the customer</div>
       </div>
       <div class="sidebar-footer">
-        <div class="key-indicator"><span class="key-dot"></span>Server-side AI proxy active</div>
+        <div class="key-indicator"><span class="key-dot"></span>Copilot agent connected</div>
       </div>
     </div>
 
@@ -199,12 +229,12 @@
       <div class="topbar">
         <div>
           <span class="topbar-title" id="section-title">Executive summary</span>
-          <span style="font-size:12px; color:var(--text-tertiary); margin-left:10px;">Jan 2025 cycle</span>
+          <span style="font-size:12px; color:var(--text-tertiary); margin-left:10px;">Jan 2026 cycle</span>
         </div>
         <div style="display:flex; gap:6px;">
-          <span class="badge badge-amber">2 HDTs</span>
+          <span class="badge badge-green">0 HDTs</span>
           <span class="badge badge-red">2 risks</span>
-          <span class="badge badge-green">Cloud −11.9%</span>
+          <span class="badge badge-green">Cloud −29.9%</span>
         </div>
       </div>
 
@@ -214,142 +244,346 @@
         <div id="sec-summary" class="section active">
           <div class="digest-card">
             <div class="dc-label">Key outcomes this cycle</div>
-            <div class="dc-body">Snapshot-based aggregates replaced PBF-based validation, delivering a <strong>1 full day reduction</strong> in lead time for data validation (Platform H2'24 O1KR3 completed). ASF metric pipeline cost cut by <strong>&gt;50%</strong> ($120 → ~$55/run) and latency reduced from 14 h to 4 h. ML-based POI confidence scores rolled out to production for restaurant category in USA — <strong>&gt;90% improvement</strong> on log-loss metric.</div>
+            <div class="dc-body">Orbis Platform transitioned to a <strong>weekly delivery cadence</strong> for the Lane Model map, with 2x–4.5x increase in KTLO. CoW processing capacity for ADAS HD Basemap expanded from 30,000 to <strong>100,000 daily H3 tiles</strong> (3x faster). OSM vandalism analytics dashboards are <strong>now live</strong>. Internal feedback from Cancun is being integrated into OrbIT for unified Lane Model feedback handling.</div>
           </div>
           <div class="metric-row">
             <div class="metric-tile">
               <div class="mt-label">Cloud spend (Jan)</div>
-              <div class="mt-val">$315k</div>
-              <div class="mt-delta delta-up">▼ 11.9% vs budget</div>
+              <div class="mt-val">$197k</div>
+              <div class="mt-delta delta-up">▼ 29.9% vs budget</div>
+            </div>
+            <div class="metric-tile">
+              <div class="mt-label">ACI Yield RM</div>
+              <div class="mt-val">93.6%</div>
+              <div class="mt-delta delta-up">▲ above 90% target</div>
             </div>
             <div class="metric-tile">
               <div class="mt-label">Prevented bad edits</div>
-              <div class="mt-val">68.7%</div>
-              <div class="mt-delta delta-up">▲ was 35.6% in Dec</div>
-            </div>
-            <div class="metric-tile">
-              <div class="mt-label">Lanes editing speed</div>
-              <div class="mt-val">7.5 t/hr</div>
-              <div class="mt-delta delta-up">▲ from 4 t/hr last month</div>
+              <div class="mt-val">62.6%</div>
+              <div class="mt-delta delta-up">▲ above ≥60% target</div>
             </div>
           </div>
           <div class="digest-card">
             <div class="dc-label">What changed / watch</div>
-            <div class="dc-body">SD map operation workflows started migrating from Sundance to OrbIT. Go/No-Go for moving to <strong>weekly releases</strong> was scheduled — repeatability and predictability flagged as the key challenge for H1. <strong>South Korea MCC risk</strong> identified — removal plan being compiled across value streams and platform.</div>
+            <div class="dc-body">Transitioned to <strong>weekly LM map delivery</strong> (18-day manual process, target 7 days). Highway-only product decision window open through <strong>end of April</strong>. <strong>Violation Store readiness</strong> is a delivery and customer-commitment risk (Toyota, JLR). Operations Training Environment <strong>MVP in March</strong>.</div>
           </div>
           <div class="digest-card">
             <div class="dc-label">What leadership should expect next cycle</div>
-            <div class="dc-body">HD product line proliferation decision expected (2–3 lines minimum, unbudgeted). GEMS commercial proposal to Microsoft in early January. Amazon Last Mile workshop scope to be confirmed. SLA proposal to Microsoft on feedback resolution volume pending finalisation.</div>
+            <div class="dc-body">P0 discoveries on <strong>self-contained incremental conflation</strong> and ingress validation to conclude. By end of Q1: validated architectural path to <strong>continuous, reset-free production</strong> and <strong>7-day LM map lead time</strong>. First version of <strong>Operations Training Environment</strong> to launch. Cost-per-unit metric definition expected April 2026.</div>
           </div>
         </div>
 
         <!-- Metrics section -->
         <div id="sec-metrics" class="section">
-          <div class="digest-card">
-            <div class="dc-label">Products</div>
-            <div class="dc-body">First Orbis Enterprise release with <strong>3.1-day lead time</strong> achieved (week 48). Main driver: structural reduction of manual validation time to ≤2 days. Non-happy path caused a release cancel in week 49. Weekly release Go/No-Go scheduled end of cycle.</div>
-          </div>
-          <div class="metric-row">
-            <div class="metric-tile">
-              <div class="mt-label">ODS cloud (Jan)</div>
-              <div class="mt-val">$85k</div>
-              <div class="mt-delta delta-up">▼ vs $95k budget</div>
+
+          <!-- 1. Cloud spend -->
+          <div class="metric-card">
+            <div class="metric-header" onclick="toggleMetric(this)">
+              <span class="metric-status status-green"></span>
+              <span class="mh-name">Cloud spend (platform)</span>
+              <span class="mh-val">$197k</span>
+              <span class="mh-delta delta-up">▼29.9% vs budget</span>
+              <a class="mh-link" href="https://m365.cloud.microsoft/chat/?titleId=T_6b9ec9cd-187e-0ab2-f87d-8db2c5dd0a95&amp;source=embedded-builder" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">Deep dive →</a>
+              <span class="chevron">&#9654;</span>
             </div>
-            <div class="metric-tile">
-              <div class="mt-label">OPC cloud (Jan)</div>
-              <div class="mt-val">$58k</div>
-              <div class="mt-delta delta-up">▼ vs $73k budget</div>
+            <div class="metric-detail">
+              <div class="md-context">Jan 2026 platform total: $197,133 (vs budget $281,400, −29.9%). Maps Ops: $50,727 (+1.7% vs budget). Full-year budget: $3.84M.</div>
+              <table class="mom-table">
+                <tr><th>Team</th><th>Jan ’26</th><th>Budget</th><th>Var</th></tr>
+                <tr><td>ODS</td><td>$75k</td><td>$103k</td><td style="color:#3b6d11">−27.5%</td></tr>
+                <tr><td>OPC</td><td>$60k</td><td>$98k</td><td style="color:#3b6d11">−38.9%</td></tr>
+                <tr><td>F&amp;R</td><td>$62k</td><td>$80k</td><td style="color:#3b6d11">−22.2%</td></tr>
+                <tr><td>Maps Ops</td><td>$51k</td><td>$50k</td><td style="color:#ba7517">+1.7%</td></tr>
+              </table>
             </div>
-            <div class="metric-tile">
-              <div class="mt-label">MQ&amp;I cloud (Jan)</div>
-              <div class="mt-val">$118k</div>
-              <div class="mt-delta delta-down">▲ planned scope increase</div>
+          </div>
+
+          <!-- 2. Orbis ACI Yield RM -->
+          <div class="metric-card">
+            <div class="metric-header" onclick="toggleMetric(this)">
+              <span class="metric-status status-green"></span>
+              <span class="mh-name">Orbis ACI Yield for RM</span>
+              <span class="mh-val">93.6%</span>
+              <span class="mh-delta delta-up">▲ target 90%</span>
+              <span class="chevron">&#9654;</span>
+            </div>
+            <div class="metric-detail">
+              <div class="md-context">779 out of 832 accepted (93.6%), comfortably above 90% target. Steady improvement from 85% in Dec.</div>
+              <table class="mom-table">
+                <tr><th>Month</th><th>Yield</th><th class="mom-bar-cell"></th></tr>
+                <tr><td class="mom-current">Feb ’26</td><td class="mom-current">93.6%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:94%;background:#639922"></div></div></td></tr>
+                <tr><td>Jan ’26</td><td>91%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:91%;background:#639922"></div></div></td></tr>
+                <tr><td>Dec ’25</td><td>85%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:85%;background:#ba7517"></div></div></td></tr>
+              </table>
             </div>
           </div>
-          <div class="digest-card">
-            <div class="dc-label">Feedback resolution</div>
-            <div class="dc-body">Prevented bad edits reached <strong>68.7%</strong> in January (target ≥50%), up significantly from 35.6% in December, partly due to a new Ground Truth source (OSM Data Working Group) showing quarantine performs better than initially thought.</div>
+
+          <!-- 3. On-time delivery OS -->
+          <div class="metric-card">
+            <div class="metric-header" onclick="toggleMetric(this)">
+              <span class="metric-status status-green"></span>
+              <span class="mh-name">On-time delivery Orbis Sectioned</span>
+              <span class="mh-val">100%</span>
+              <span class="mh-delta delta-up">▲ target 95%</span>
+              <span class="chevron">&#9654;</span>
+            </div>
+            <div class="metric-detail">
+              <div class="md-context">100% on-time delivery maintained for three consecutive months.</div>
+              <table class="mom-table">
+                <tr><th>Month</th><th>Rate</th><th class="mom-bar-cell"></th></tr>
+                <tr><td class="mom-current">Feb ’26</td><td class="mom-current">100%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#639922"></div></div></td></tr>
+                <tr><td>Jan ’26</td><td>100%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#639922"></div></div></td></tr>
+                <tr><td>Dec ’25</td><td>100%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#639922"></div></div></td></tr>
+              </table>
+            </div>
           </div>
-          <div class="digest-card">
-            <div class="dc-label">Entity matching</div>
-            <div class="dc-body">8× duplicate reduction with 96% matching quality for Shops, Restaurants, and Nightlife POI groups. Rolling out to TOP29 priority countries. Work started on 8 new POI category groups.</div>
+
+          <!-- 4. On-time delivery LM -->
+          <div class="metric-card">
+            <div class="metric-header" onclick="toggleMetric(this)">
+              <span class="metric-status status-green"></span>
+              <span class="mh-name">On-time delivery LM map</span>
+              <span class="mh-val">100%</span>
+              <span class="mh-delta delta-up">▲ target 95%</span>
+              <span class="chevron">&#9654;</span>
+            </div>
+            <div class="metric-detail">
+              <div class="md-context">Lane Model map delivery at 100% on-time since Jan 2026.</div>
+              <table class="mom-table">
+                <tr><th>Month</th><th>Rate</th><th class="mom-bar-cell"></th></tr>
+                <tr><td class="mom-current">Feb ’26</td><td class="mom-current">100%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#639922"></div></div></td></tr>
+                <tr><td>Jan ’26</td><td>100%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#639922"></div></div></td></tr>
+              </table>
+            </div>
           </div>
+
+          <!-- 5. E2E lead time LM -->
+          <div class="metric-card">
+            <div class="metric-header" onclick="toggleMetric(this)">
+              <span class="metric-status status-red"></span>
+              <span class="mh-name">E2E lead time LM map</span>
+              <span class="mh-val">13.7 days</span>
+              <span class="mh-delta delta-down">▲ target 7 days</span>
+              <a class="mh-link" href="https://m365.cloud.microsoft/chat/?titleId=T_6b9ec9cd-187e-0ab2-f87d-8db2c5dd0a95&amp;source=embedded-builder" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">Deep dive →</a>
+              <span class="chevron">&#9654;</span>
+            </div>
+            <div class="metric-detail">
+              <div class="md-context">Currently 13.68 days (target 7 days). Improved from 15.57 in Dec but still nearly 2x target. Dedicated workstream aims for stable, scalable weekly NDS release flow.</div>
+              <table class="mom-table">
+                <tr><th>Month</th><th>Lead time</th><th class="mom-bar-cell"></th></tr>
+                <tr><td class="mom-current">Feb ’26</td><td class="mom-current">13.68d</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#e24b4a"></div></div></td></tr>
+                <tr><td>Jan ’26</td><td>12.9d</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:94%;background:#e24b4a"></div></div></td></tr>
+                <tr><td>Dec ’25</td><td>15.57d</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#e24b4a"></div></div></td></tr>
+              </table>
+            </div>
+          </div>
+
+          <!-- 6. Avg production issues per LM release -->
+          <div class="metric-card">
+            <div class="metric-header" onclick="toggleMetric(this)">
+              <span class="metric-status status-green"></span>
+              <span class="mh-name">Avg production issues per LM release</span>
+              <span class="mh-val">0.66</span>
+              <span class="mh-delta delta-up">▼ target &lt;1</span>
+              <span class="chevron">&#9654;</span>
+            </div>
+            <div class="metric-detail">
+              <div class="md-context">0.66 production issues per release in Feb, within the &lt;1 target. Jan had zero issues.</div>
+              <table class="mom-table">
+                <tr><th>Month</th><th>Issues/release</th><th class="mom-bar-cell"></th></tr>
+                <tr><td class="mom-current">Feb ’26</td><td class="mom-current">0.66</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:66%;background:#639922"></div></div></td></tr>
+                <tr><td>Jan ’26</td><td>0</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:2%;background:#639922"></div></div></td></tr>
+              </table>
+            </div>
+          </div>
+
+          <!-- 7. Avg platform cost per hosted layer -->
+          <div class="metric-card">
+            <div class="metric-header" onclick="toggleMetric(this)">
+              <span class="metric-status status-amber"></span>
+              <span class="mh-name">Avg platform cost per hosted layer</span>
+              <span class="mh-val">$510</span>
+              <span class="mh-delta delta-down">▲ target $345</span>
+              <a class="mh-link" href="https://m365.cloud.microsoft/chat/?titleId=T_6b9ec9cd-187e-0ab2-f87d-8db2c5dd0a95&amp;source=embedded-builder" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">Deep dive →</a>
+              <span class="chevron">&#9654;</span>
+            </div>
+            <div class="metric-detail">
+              <div class="md-context">$510 per hosted layer in Feb (target $345). Trending down from $564 in Dec. ARM migration (one team, 40% of budget) expected to reduce batch costs by ~30%.</div>
+              <table class="mom-table">
+                <tr><th>Month</th><th>Cost</th><th class="mom-bar-cell"></th></tr>
+                <tr><td class="mom-current">Feb ’26</td><td class="mom-current">$510</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#ba7517"></div></div></td></tr>
+                <tr><td>Jan ’26</td><td>$551</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#ba7517"></div></div></td></tr>
+                <tr><td>Dec ’25</td><td>$564</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#e24b4a"></div></div></td></tr>
+              </table>
+            </div>
+          </div>
+
+          <!-- 8. Prevented bad edits -->
+          <div class="metric-card">
+            <div class="metric-header" onclick="toggleMetric(this)">
+              <span class="metric-status status-green"></span>
+              <span class="mh-name">Prevented bad edits</span>
+              <span class="mh-val">62.6%</span>
+              <span class="mh-delta delta-up">▲ target ≥60%</span>
+              <a class="mh-link" href="https://m365.cloud.microsoft/chat/?titleId=T_6b9ec9cd-187e-0ab2-f87d-8db2c5dd0a95&amp;source=embedded-builder" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">Deep dive →</a>
+              <span class="chevron">&#9654;</span>
+            </div>
+            <div class="metric-detail">
+              <div class="md-context">62.6% in Feb (target ≥60%). ML precision ~35%, ~33% of leads fixed by OSM community, ~55% reviewed on average. MLP 2.0 investments in model versioning and retraining target precision gains in Q2.</div>
+              <table class="mom-table">
+                <tr><th>Month</th><th>Rate</th><th>vs Target (≥60%)</th><th class="mom-bar-cell"></th></tr>
+                <tr><td class="mom-current">Feb ’26</td><td class="mom-current">62.6%</td><td style="color:#3b6d11">+2.6pp</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:63%;background:#639922"></div></div></td></tr>
+                <tr><td>Jan ’26</td><td>60.3%</td><td style="color:#3b6d11">+0.3pp</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:60%;background:#639922"></div></div></td></tr>
+                <tr><td>Dec ’25</td><td>64.7%</td><td style="color:#3b6d11">+4.7pp</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:65%;background:#639922"></div></div></td></tr>
+              </table>
+            </div>
+          </div>
+
+          <!-- 9. Quarantine avg lead time -->
+          <div class="metric-card">
+            <div class="metric-header" onclick="toggleMetric(this)">
+              <span class="metric-status status-amber"></span>
+              <span class="mh-name">Quarantine avg lead time</span>
+              <span class="mh-val">26.2h</span>
+              <span class="mh-delta delta-down">▲ target &lt;24h</span>
+              <span class="chevron">&#9654;</span>
+            </div>
+            <div class="metric-detail">
+              <div class="md-context">26.2h in Feb, improving from 30.1h in Jan but still above the 24h target. Quarantine discovery focuses on improving lock management and release control.</div>
+              <table class="mom-table">
+                <tr><th>Month</th><th>Lead time</th><th class="mom-bar-cell"></th></tr>
+                <tr><td class="mom-current">Feb ’26</td><td class="mom-current">26.2h</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#ba7517"></div></div></td></tr>
+                <tr><td>Jan ’26</td><td>30.1h</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#e24b4a"></div></div></td></tr>
+                <tr><td>Dec ’25</td><td>28.3h</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:100%;background:#e24b4a"></div></div></td></tr>
+              </table>
+            </div>
+          </div>
+
+          <!-- 10. Operator readiness on day 1 -->
+          <div class="metric-card">
+            <div class="metric-header" onclick="toggleMetric(this)">
+              <span class="metric-status status-red"></span>
+              <span class="mh-name">Operator readiness on day 1</span>
+              <span class="mh-val">16%</span>
+              <span class="mh-delta delta-down">▼ target 90%</span>
+              <a class="mh-link" href="https://m365.cloud.microsoft/chat/?titleId=T_6b9ec9cd-187e-0ab2-f87d-8db2c5dd0a95&amp;source=embedded-builder" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">Deep dive →</a>
+              <span class="chevron">&#9654;</span>
+            </div>
+            <div class="metric-detail">
+              <div class="md-context">16% in Feb (was 25% in Dec). Target is 90%. Training Environment MVP scope agreed, delivery scheduled for March. Compatible with RM Lanes training packages initially.</div>
+              <table class="mom-table">
+                <tr><th>Month</th><th>Readiness</th><th class="mom-bar-cell"></th></tr>
+                <tr><td class="mom-current">Feb ’26</td><td class="mom-current">16%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:16%;background:#e24b4a"></div></div></td></tr>
+                <tr><td>Dec ’25</td><td>25%</td><td class="mom-bar-cell"><div class="mom-bar-track"><div class="mom-bar-fill" style="width:25%;background:#e24b4a"></div></div></td></tr>
+              </table>
+            </div>
+          </div>
+
+          <!-- 11. Platform contribution to operator efficiency -->
+          <div class="metric-card">
+            <div class="metric-header" onclick="toggleMetric(this)">
+              <span class="metric-status status-red"></span>
+              <span class="mh-name">Platform contrib. to operator efficiency</span>
+              <span class="mh-val">0%</span>
+              <span class="mh-delta delta-down">▼ target 10%</span>
+              <a class="mh-link" href="https://m365.cloud.microsoft/chat/?titleId=T_6b9ec9cd-187e-0ab2-f87d-8db2c5dd0a95&amp;source=embedded-builder" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">Deep dive →</a>
+              <span class="chevron">&#9654;</span>
+            </div>
+            <div class="metric-detail">
+              <div class="md-context">0% contribution in Jan and Feb (target 10% for H1 2026). Vertex Top 10 OPS improvements: 5 of 10 completed and released (Q1 milestone achieved). Workflow Templates, Geolocking v1.1, OrbIT self-service pushed to Q2 due to Training Environment priority shift.</div>
+            </div>
+          </div>
+
         </div>
 
         <!-- HDT section -->
         <div id="sec-hdt" class="section">
-          <div class="digest-card" style="border-left: 3px solid #ba7517; border-radius: 0 var(--radius-lg) var(--radius-lg) 0;">
-            <div class="dc-label">HDT 1 — HD product lines</div>
-            <div class="dc-body">Multiple NDS.Live variants discovered — not all manageable on NDS.Live side. At least <strong>2–3 product lines</strong> anticipated based on customer road class coverage requirements. <strong>Not budgeted.</strong> Clear agreements needed between HD team, Platform, and NDS.Live to avoid per-customer proliferation. Decision required this cycle.</div>
-          </div>
-          <div class="digest-card" style="border-left: 3px solid #ba7517; border-radius: 0 var(--radius-lg) var(--radius-lg) 0;">
-            <div class="dc-label">HDT 2 — Map evaluation tool (Vertex)</div>
-            <div class="dc-body">Prospects using Vertex as improvised evaluation tool. DiDi and Audi flagged POI search/display gaps (stacked POIs aggregated, search latency). UXR research initiated. If Vertex becomes the long-term answer, <strong>roadmap and budget amendments required.</strong> H1 focus remains OPS efficiency — short-term Vertex improvements not prioritised. Business case targeted for Q6.</div>
+          <div class="digest-card" style="border-left: 3px solid #378add; border-radius: 0 var(--radius-lg) var(--radius-lg) 0;">
+            <div class="dc-label">Status</div>
+            <div class="dc-body">No hotly debated topics this month. Previous HDTs (HD product lines, Vertex evaluation tool, GEMS, Amazon Last Mile) have been resolved or transitioned into regular workstreams.</div>
           </div>
           <div class="digest-card">
-            <div class="dc-label">HDT 3 (update) — GEMS</div>
-            <div class="dc-body">Microsoft expressed alignment with commercial-first GEMS pitch. Next steps: collaborate with POI team on business drivers, present detailed proposal to Microsoft in early January. Potential outcomes: open-source, commercial, or hybrid.</div>
-          </div>
-          <div class="digest-card">
-            <div class="dc-label">HDT 4 (update) — Amazon Last Mile</div>
-            <div class="dc-body">POC results shared with ALM: <strong>95% accuracy, 99.5% precision.</strong> ALM expressed interest in joint workshops to explore a North Star. TomTom preparing workshop scope and strategy. Commercial proposal to follow.</div>
+            <div class="collapsible-toggle" onclick="toggleCollapse(this)">
+              <div class="dc-label" style="margin-bottom:0">Note — Highway-only product (ongoing)</div>
+              <span class="chevron">&#9654;</span>
+            </div>
+            <div class="dc-body" style="margin-top:8px">Decision window remains <strong>open through end of April</strong>. Volvo does not require a dedicated highway-only product today; CARIAD quality and safety requirements still being assessed.</div>
+            <div class="collapsible-detail">
+              <p>There was previously an HDT on whether to continue, pause, or stop development of the highway-only map product. Volvo can filter non-highway data themselves and no other OEM has confirmed requirements. Infrastructure and maintenance costs remain high.</p>
+              <p>However, CARIAD may have specific quality and safety requirements related to a highway-only map. To avoid stopping prematurely, development continues until end of April, allowing the Fermi team to complete the batch component and establish the technical foundation before an informed go/no-go decision.</p>
+            </div>
           </div>
         </div>
 
         <!-- Risks section -->
         <div id="sec-risks" class="section">
           <div class="digest-card" style="border-left: 3px solid #e24b4a; border-radius: 0 var(--radius-lg) var(--radius-lg) 0;">
-            <div class="dc-label">Risk 1 — Honda HD measurements</div>
-            <div class="dc-body">Commitment to produce HD measurements for Honda using AllVision data is <strong>at risk</strong> due to mismatch between Genesis HD and reference data. Deadline extended to end of February. Mitigation: engaging AllVision this week to resolve differences. Owner: Platform/HD team.</div>
+            <div class="collapsible-toggle" onclick="toggleCollapse(this)">
+              <div class="dc-label" style="margin-bottom:0">Risk 1 — Violation Store readiness &amp; CC downstream integration</div>
+              <span class="chevron">&#9654;</span>
+            </div>
+            <div class="dc-body" style="margin-top:8px">OPS violation resolution is at <strong>increasing risk</strong> as scope expands beyond lanes to routing features (speeds, one-ways, control access). In the current model, OPS can only start resolving violations after product completion, leaving very limited time before customer delivery. <strong>Not feasible at current and expected volumes.</strong></div>
+            <div class="collapsible-detail">
+              <p>Upstream adoption of CC rules across value streams is currently weak and has known feature gaps (e.g., teams needing a “bound state of multiple layers” to perform CC rules upstream). Downstream OPS continues to absorb violations across value streams exceeding available resources.</p>
+              <p>Clustering improves throughput by bundling violations into a single task, but clusters mix severities (critical, warnings, false positives) and the system treats all tasks as equal. Severity information exists in RMS but is not available in CC run outputs used operationally. Outside of Toyota, there is no consistent “master rule list” with severity tagging.</p>
+              <p>This creates a <strong>prioritization risk</strong> (OPS cannot focus on highest-impact items) and a <strong>reporting/traceability risk</strong>, especially for Toyota quality reporting. Violation Store is expected to mitigate this by preserving violation history and enabling false-positive stamping.</p>
+              <p><strong>Recommendation:</strong> Treat as a delivery and customer-commitment risk (Toyota in particular). Prioritize: (1) CC downstream → Violation Store ingestion with false-positive stamping, (2) severity-based prioritization using CC team severity list, (3) find owner for severity metadata exposure, (4) structured plan to increase upstream CC adoption.</p>
+            </div>
           </div>
           <div class="digest-card" style="border-left: 3px solid #e24b4a; border-radius: 0 var(--radius-lg) var(--radius-lg) 0;">
-            <div class="dc-label">Risk 2 — South Korea MCC</div>
-            <div class="dc-body">Map Certification Code at risk for ONKOR_25050. Features in sensitive area polygons must be removed urgently. Value streams lack tools to filter/delete these features. Removal plan being compiled; effort estimations underway across value streams and platform. Staff engineers from multiple teams to propose solutions.</div>
-          </div>
-          <div class="digest-card">
-            <div class="dc-label">Risk 3 — Vertex evaluation gaps (ongoing)</div>
-            <div class="dc-body">Vertex not set up as a customer evaluation tool. Short-term improvements not on H1 roadmap (OPS efficiency focus). Discovery and research underway with UXR. Business case for Vertex-as-evaluation-tool targeted Q6.</div>
+            <div class="collapsible-toggle" onclick="toggleCollapse(this)">
+              <div class="dc-label" style="margin-bottom:0">Risk 2 — Unifying customer feedback for LM product</div>
+              <span class="chevron">&#9654;</span>
+            </div>
+            <div class="dc-body" style="margin-top:8px">Lane Model feedback reporting is <strong>fragmented across multiple channels</strong>. Current IM framework not aligned with LM maturity level — most issues are structural, requiring cross-functional collaboration. <strong>Detection mechanisms not yet fully established</strong> (e.g., Control Checks only available for Basemap today).</div>
+            <div class="collapsible-detail">
+              <p>ADAS team is seeking one unified way of receiving all possible feedback so that Lane Model issues can trigger the right actions and guide downstream processes effectively.</p>
+              <p>F&amp;R has created a proposal to extend the unified E2E feedback workflow (created for road model) to lane model feedback with a customized flow suitable for handling the volume, triage, resolution and reporting for the ADAS team.</p>
+              <p>The solution extends the OrbIT ecosystem (Map Feedback API, Issue Store, Task Manager, Map Feedback Hub) and introduces new components like <strong>Violation Store</strong> and <strong>Triage</strong> for structured intake, classification, prioritization and routing of LM feedback.</p>
+              <p>Integration of Cancun Lane Model feedback into Issue Store is in progress to position OrbIT as the first-class ecosystem for LM feedback within a unified flow.</p>
+            </div>
           </div>
         </div>
 
         <!-- Customers section -->
         <div id="sec-customers" class="section">
           <div class="digest-card">
-            <div class="dc-label">Microsoft</div>
-            <div class="dc-body">First Customer Feedback Hub demo completed — well received. Feature requests raised: (1) show where fix was applied (OSM vs TomTom), (2) context on rejections, (3) analytics on slow-resolution feedback. SLA proposal (high-priority feedback volumes + best-effort long-tail) under review, to be concluded early January. Sample bulk feedback from Microsoft incoming.</div>
+            <div class="dc-label">Toyota</div>
+            <div class="dc-body">Strong focus on <strong>map freshness</strong>, looking at daily updates. Starting with monthly updates but limited by AISIN’s quarterly cycles. Next major metrics meeting in <strong>May</strong>.</div>
           </div>
           <div class="digest-card">
-            <div class="dc-label">New prospects</div>
-            <div class="dc-body"><strong>Justos</strong> signed extended POC contract for the analytics engine. <strong>e-smart</strong> is a new POC partner for BYOD/MMaaS — early stage, strong fit with product vision, high transparency. <strong>Amazon Last Mile</strong> workshops being scoped following strong POC results.</div>
+            <div class="dc-label">CARIAD / Volkswagen Group</div>
+            <div class="dc-body">CARIAD requests more <strong>developer-focused release notes</strong> with delivered map content scope and deeper insights into compiled map quality. Expects quality metrics covering compiled map, not just source data. Evaluating <strong>3 BYOD layers</strong>. Porsche has no strict data limits; Audi and CARIAD value detailed freshness discussions.</div>
           </div>
           <div class="digest-card">
-            <div class="dc-label">Toyota ADAS (internal)</div>
-            <div class="dc-body">Crosslink editing: validation layer set up in Vertex Orbis Staging; fallout loaded as tasks in Issue Tracker; end-to-end editing pipeline test in progress. Lanes editing: locking geometry by default, auto-refresh after changelet submission. Efficiency reached <strong>7.5 tasks/hr</strong> (up from 4 tasks/hr).</div>
+            <div class="dc-label">Tesla</div>
+            <div class="dc-body">Wants a <strong>15-minute update cycle</strong> via fleet/social-media detection. Needs Orbis OGP docs and CA sample map. <strong>BYOD + GEM onboarding</strong> plan coming (with Stellantis).</div>
+          </div>
+          <div class="digest-card">
+            <div class="dc-label">Hyundai Motor Group</div>
+            <div class="dc-body">Evaluating move to Orbis, needs <strong>stable IDs</strong>. Priorities: Lane Guidance, Routing, Traffic, 3D visuals. HAE wants <strong>daily changelets</strong>; system supports weekly.</div>
+          </div>
+          <div class="digest-card">
+            <div class="dc-label">Other OEMs</div>
+            <div class="dc-body"><strong>Volvo:</strong> Highways-only map delayed to Nov 2026, evaluating AllRoads vs highways-only. <strong>Mercedes:</strong> Interested in highways-only, still evaluating. <strong>Honda:</strong> Workshop done; uses quarterly NDS.Live, needs quality assurance before streaming.</div>
+          </div>
+          <div class="digest-card">
+            <div class="dc-label">BYOD / GEM prospects</div>
+            <div class="dc-body"><strong>Ford:</strong> Struggles merging HERE with others, exploring BYOD or GERS+GEM. <strong>Unipol:</strong> Interested in self-hosted GEM, H2 availability. <strong>MS2:</strong> Reviewing GEM, AADT integration, New Mexico dataset ready. <strong>LTA Singapore:</strong> Defining next GEM steps. <strong>Arity:</strong> Extending PBF with LR offsets.</div>
+          </div>
+          <div class="digest-card">
+            <div class="dc-label">Value stream perspective</div>
+            <div class="dc-body"><strong>Geopol/Area:</strong> 2x–7x slowdown on large read operations near State Reader. Believe multi-tenancy would lower DiSCOS bill. <strong>Geopol/APT/POIs:</strong> DiSCOS auto-scaling states don’t scale back automatically. <strong>POIs/APT:</strong> Credential rotations not communicated, causing downtime. <strong>HD Basemap:</strong> Consistency check disabled in CoW due to throughput limits; onboarding 120 new ADAS staff hampered by poor documentation.</div>
           </div>
         </div>
 
       </div><!-- /content -->
 
-      <!-- Suggested questions -->
-      <div class="chip-row">
-        <div class="chip" onclick="askQ('What are the two main hotly debated topics and what decisions are needed?')">What are the HDTs? ↗</div>
-        <div class="chip" onclick="askQ('Summarise the cloud cost situation and how we track against budget')">Cloud costs ↗</div>
-        <div class="chip" onclick="askQ('What is the risk with Honda HD measurements and what is the mitigation?')">Honda risk ↗</div>
-        <div class="chip" onclick="askQ('What progress was made with Amazon Last Mile and what are the next steps?')">Amazon Last Mile ↗</div>
-      </div>
-
-      <!-- Chat -->
-      <div class="chat-area">
-        <div class="chat-msgs" id="chat-msgs">
-          <div class="msg bot">
-            <div class="msg-name">MBR assistant</div>
-            <div class="msg-bubble">I have the February 2025 MBR loaded. Ask me anything about the cycle — metrics, risks, debates, or customer updates.</div>
-          </div>
-        </div>
-        <div class="chat-input-row">
-          <input type="text" id="q-input" placeholder="Ask about this MBR…" onkeydown="if(event.key==='Enter') sendQ()" />
-          <button class="send-btn" onclick="sendQ()">Send ↗</button>
-        </div>
+      <!-- Copilot agent link -->
+      <div class="copilot-bar">
+        <svg class="copilot-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-2h2v2zm0-4h-2V7h2v6zm4 4h-2v-2h2v2zm0-4h-2V7h2v6z" fill="var(--text-info)"/></svg>
+        <a href="https://m365.cloud.microsoft/chat/?titleId=T_6b9ec9cd-187e-0ab2-f87d-8db2c5dd0a95&amp;source=embedded-builder" target="_blank" rel="noopener noreferrer">Ask the MBR Copilot agent ↗</a>
+        <span class="copilot-hint">Opens in Microsoft 365 Copilot</span>
       </div>
 
     </div><!-- /main -->
@@ -357,107 +591,25 @@
 </div><!-- /app -->
 
 <script>
-const MBR_CONTEXT = `You are an AI assistant embedded in a Monthly Business Review (MBR) tool for TomTom's Orbis Platform team. You have access to the February 2025 MBR document covering the January 2025 cycle. Answer questions concisely and factually, referencing specific data. Be direct and useful for a senior leader with limited time.
+function toggleMetric(el) {
+  el.classList.toggle('open');
+  const detail = el.nextElementSibling;
+  if (detail) detail.classList.toggle('open');
+}
 
-Key facts from the MBR:
-- Snapshot-based aggregates replaced PBF-based validation: 1 full day reduction in lead time (H2'24 O1KR3 completed).
-- ASF metric pipeline: cost cut >50% ($120 to ~$55/run), latency from 14h to 4h.
-- ML-based POI Confidence Scores: rolled out for restaurant/USA, >90% improvement on log-loss.
-- Prevented bad edits metric: 68.7% in Jan (up from 35.6% Dec, 36.6% Nov). Target >=50%.
-- Lane editing efficiency: improved from 4 to 7.5 tasks/hr over the last month.
-- Cloud costs Jan 2025: $315,245 total (MoM +10.1%, vs budget -11.9%). ODS: $85k, OPC: $58k, F&R: $54k, MQ&I: $118k. Full year budget: $4.38M.
-- Issue Tracker: record 6 tasks/sec claimed. SD workflow Go/No-Go for Sundance retirement in progress.
-- SD map migration from Sundance to OrbIT started.
-- Weekly releases: first 3.1-day lead time achieved (week 48). Non-happy path caused cancel in week 49. H1 focus: repeatability and predictability.
-- Entity Matching: 8x duplicate reduction, 96% matching quality, rolling out to TOP29 countries.
-
-HDT 1 — HD product lines: Multiple NDS.Live variants discovered, unbudgeted. At least 2-3 product lines anticipated. Needs agreement between HD team, Platform, NDS.Live.
-HDT 2 — Orbis map evaluation tool: Vertex being used as improvised tool. DiDi and Audi flagged POI search/display gaps. UXR research underway. If Vertex chosen long-term, roadmap/budget amendment needed.
-HDT 3 (update) — GEMS: Microsoft showed willingness to explore commercial and product details. Next: collaborate with POI team, present proposal early January.
-HDT 4 (update) — Amazon Last Mile POC: 95% accuracy, 99.5% precision. ALM interested in workshops. Proposal being prepared.
-
-Risk 1: Honda HD measurements at risk due to Genesis HD vs AllVision reference mismatch. Deadline extended to end of February.
-Risk 2: South Korea MCC at risk. Removal plan being compiled for sensitive area features. Effort estimations underway.
-Risk 3: Vertex not fit-for-purpose as evaluation tool — ongoing, not prioritised in H1.
-
-Customer updates:
-- Justos signed extended POC contract for analytics engine.
-- e-smart: new POC partner for BYOD/MMaaS, early stage.
-- Microsoft: first CFH demo done, feature requests raised, SLA proposal under review.
-- Toyota ADAS: crosslink and lanes editing progressing, efficiency at 7.5 tasks/hr.
-- Amazon Last Mile: workshops being scoped.
-
-Keep answers under 100 words unless a longer answer is clearly needed. Use plain conversational language without markdown formatting or bullet points.`;
-
-let chatHistory = [];
+function toggleCollapse(el) {
+  el.classList.toggle('open');
+  const detail = el.parentElement.querySelector('.collapsible-detail');
+  if (detail) detail.classList.toggle('open');
+}
 
 function showSection(id, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   el.classList.add('active');
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById('sec-' + id).classList.add('active');
-  const titles = { summary: 'Executive summary', metrics: 'Metrics', hdt: 'Hotly debated topics', risks: 'Risks', customers: 'Customer deep dives' };
+  const titles = { summary: 'Executive summary', metrics: 'Metrics', hdt: 'Hotly debated topics', risks: 'Risks', customers: 'Voice of the customer' };
   document.getElementById('section-title').textContent = titles[id];
-}
-
-function askQ(q) {
-  document.getElementById('q-input').value = q;
-  sendQ();
-}
-
-function appendMsg(role, text) {
-  const c = document.getElementById('chat-msgs');
-  const d = document.createElement('div');
-  d.className = 'msg ' + role;
-  d.innerHTML = (role === 'bot' ? '<div class="msg-name">MBR assistant</div>' : '') +
-    '<div class="msg-bubble">' + text + '</div>';
-  c.appendChild(d);
-  c.scrollTop = c.scrollHeight;
-  return d;
-}
-
-function appendThinking() {
-  const c = document.getElementById('chat-msgs');
-  const d = document.createElement('div');
-  d.className = 'msg bot';
-  d.innerHTML = '<div class="msg-name">MBR assistant</div><div class="msg-bubble"><div class="dot-anim"><span></span><span></span><span></span></div></div>';
-  c.appendChild(d);
-  c.scrollTop = c.scrollHeight;
-  return d;
-}
-
-async function sendQ() {
-  const inp = document.getElementById('q-input');
-  const q = inp.value.trim();
-  if (!q) return;
-  inp.value = '';
-  appendMsg('user', q);
-  chatHistory.push({ role: 'user', content: q });
-  const thinking = appendThinking();
-  try {
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        system: MBR_CONTEXT,
-        messages: chatHistory
-      })
-    });
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(errText || 'Request failed');
-    }
-    const data = await res.json();
-    const reply = data.content?.find(b => b.type === 'text')?.text || 'No response.';
-    thinking.remove();
-    appendMsg('bot', reply);
-    chatHistory.push({ role: 'assistant', content: reply });
-  } catch (e) {
-    thinking.remove();
-    appendMsg('bot', 'Something went wrong: ' + e.message);
-  }
 }
 </script>
 </body>
